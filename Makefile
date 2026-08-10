@@ -62,21 +62,23 @@ TOOLS := $(TOOLSLZ) $(TOOLSB2C)
 
 ################################################################################
 
-.PHONY: all clean $(LDRDIR) $(TOOLS)
+.PHONY: all clean font $(LDRDIR) $(TOOLS)
 
 all: $(OUTPUTDIR)/$(TARGET).bin $(LDRDIR)
 	@echo "--------------------------------------"
 	@echo -n "Uncompr size: "
-	$(eval BIN_SIZE = $(shell wc -c < $(OUTPUTDIR)/$(TARGET)_unc.bin))
-	@echo $(BIN_SIZE)" Bytes"
+	@BIN_SIZE=$$(wc -c < $(OUTPUTDIR)/$(TARGET)_unc.bin); echo $$BIN_SIZE" Bytes"
 	@echo "Uncompr Max:  140288 Bytes + 3 KiB BSS"
-	@if [ ${BIN_SIZE} -gt 140288 ]; then echo "\e[1;33mUncompr size exceeds limit!\e[0m"; fi
+	@BIN_SIZE=$$(wc -c < $(OUTPUTDIR)/$(TARGET)_unc.bin); if [ $$BIN_SIZE -gt 140288 ]; then echo "\e[1;33mUncompr size exceeds limit!\e[0m"; fi
 	@echo -n "Payload size: "
-	$(eval BIN_SIZE = $(shell wc -c < $(OUTPUTDIR)/$(TARGET).bin))
-	@echo $(BIN_SIZE)" Bytes"
+	@BIN_SIZE=$$(wc -c < $(OUTPUTDIR)/$(TARGET).bin); echo $$BIN_SIZE" Bytes"
 	@echo "Payload Max:  126296 Bytes"
-	@if [ ${BIN_SIZE} -gt 126296 ]; then echo "\e[1;33mPayload size exceeds limit!\e[0m"; fi
+	@BIN_SIZE=$$(wc -c < $(OUTPUTDIR)/$(TARGET).bin); if [ $$BIN_SIZE -gt 126296 ]; then echo "\e[1;31mPayload size exceeds limit!\e[0m"; exit 1; fi
 	@echo "--------------------------------------"
+
+font:
+	@if [ -z "$(UNIFONT_HEX)" ]; then echo "Set UNIFONT_HEX=/path/to/unifont.hex"; exit 1; fi
+	python3 tools/fontgen/fontgen.py --font "$(UNIFONT_HEX)" --output source/gfx/font_zh.inl source
 
 clean: $(TOOLS)
 	@rm -rf $(BUILDDIR)
@@ -90,6 +92,7 @@ $(LDRDIR): $(OUTPUTDIR)/$(TARGET).bin
 	mv $(OUTPUTDIR)/$(TARGET).bin $(OUTPUTDIR)/$(TARGET)_unc.bin
 	@mv $(OUTPUTDIR)/$(TARGET).bin.00.lz payload_00
 	@mv $(OUTPUTDIR)/$(TARGET).bin.01.lz payload_01
+	@$(TOOLSLZ)/check_overlap $(OUTPUTDIR)/$(TARGET)_unc.bin payload_00 payload_01
 	@$(TOOLSB2C)/bin2c payload_00 > $(LDRDIR)/payload_00.h
 	@$(TOOLSB2C)/bin2c payload_01 > $(LDRDIR)/payload_01.h
 	@rm payload_00

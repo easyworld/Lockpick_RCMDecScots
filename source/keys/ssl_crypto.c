@@ -110,7 +110,7 @@ bool decrypt_ssl_rsa_key(key_storage_t *keys, void *buffer) {
 
         const u8 *key8 = (const u8 *)encrypted_key;
         if (memcmp(calc_mac, &key8[ctr_size], 0x10) != 0) {
-            EPRINTF("SSL keypair has invalid GMac.");
+            EPRINTF("SSL 密钥对的 GMac 无效.");
             memset(keys->ssl_rsa_key, 0, sizeof(keys->ssl_rsa_key));
             return false;
         }

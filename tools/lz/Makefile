@@ -6,11 +6,14 @@ endif
 
 .PHONY: all clean
 
-all: lz77
+all: lz77 check_overlap
 	@echo > /dev/null
 
 clean:
-	@rm -f lz77
+	@rm -f lz77 check_overlap
 
 lz77: lz.c lz77.c
 	@$(NATIVE_CC) -o $@ lz.c lz77.c
+
+check_overlap: lz.c check_overlap.c
+	@$(NATIVE_CC) -o $@ lz.c check_overlap.c

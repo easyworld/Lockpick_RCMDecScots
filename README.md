@@ -66,6 +66,24 @@ PartialAesKeyCrack.exe 11111111111111111111111111111111 222222222222222222222222
    make
    ```
 
+### Chinese font subset
+
+The Chinese interface uses a generated 16x16, 1-bit GNU Unifont subset. The
+generated `source/gfx/font_zh.inl` is committed, so a normal build does not
+need the complete font. To regenerate it after changing Chinese text:
+
+1. Download `unifont-17.0.05.hex.gz` from
+   [GNU Unifont](https://unifoundry.com/unifont/) and decompress it.
+2. Run:
+   ```
+   make font UNIFONT_HEX=/path/to/unifont-17.0.05.hex
+   ```
+
+The generator scans C headers and sources, embeds only used CJK glyphs, and
+rejects more than 256 glyphs to protect the RCM payload size limit. The font
+subset is distributed under the SIL Open Font License 1.1; see
+`source/gfx/OFL-1.1.txt`.
+
 ## 🙌 Massive Thanks to CTCaer !
 
 This project owes a lot to [Hekate](https://github.com/CTCaer/hekate), and special thanks go to **CTCaer** for his valuable advice, expertise, and humor throughout the development process. 🎉

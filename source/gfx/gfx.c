@@ -19,12 +19,15 @@
 #include <stdarg.h>
 #include <string.h>
 #include "gfx.h"
+#include "font_zh.inl"
 
 // Global gfx console and context.
 gfx_ctxt_t gfx_ctxt;
 gfx_con_t gfx_con;
 
 static bool gfx_con_init_done = false;
+static u32 _gfx_utf8_codepoint;
+static u8 _gfx_utf8_remaining;
 
 static const u8 _gfx_font[] = {
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // Char 032 ( )
@@ -160,6 +163,8 @@ void gfx_con_init()
 	gfx_con.fillbg = 1;
 	gfx_con.bgcol = 0xFF1B1B1B;
 	gfx_con.mute = 0;
+	_gfx_utf8_codepoint = 0;
+	_gfx_utf8_remaining = 0;
 
 	gfx_con_init_done = true;
 }
@@ -183,8 +188,79 @@ void gfx_con_setpos(u32 x, u32 y)
 	gfx_con.y = y;
 }
 
-void gfx_putc(char c)
+static const u8 *_gfx_get_zh_glyph(u32 codepoint)
 {
+	int low = 0;
+	int high = GFX_FONT_ZH_GLYPH_COUNT - 1;
+
+	while (low <= high)
+	{
+		int mid = low + ((high - low) >> 1);
+		u16 candidate = _gfx_font_zh_codepoints[mid];
+		if (candidate == codepoint)
+			return _gfx_font_zh_glyphs[mid];
+		if (candidate < codepoint)
+			low = mid + 1;
+		else
+			high = mid - 1;
+	}
+
+	return NULL;
+}
+
+static void _gfx_draw_zh_glyph(const u8 *glyph)
+{
+	u32 size = gfx_con.fntsz == 16 ? 16 : 8;
+	u32 *fb = gfx_ctxt.fb + gfx_con.x + gfx_con.y * gfx_ctxt.stride;
+
+	for (u32 y = 0; y < size; y++)
+	{
+		for (u32 x = 0; x < size; x++)
+		{
+			bool set;
+			if (size == 16)
+			{
+				u16 row = ((u16)glyph[y * 2] << 8) | glyph[y * 2 + 1];
+				set = row & (0x8000 >> x);
+			}
+			else
+			{
+				u16 row0 = ((u16)glyph[y * 4] << 8) | glyph[y * 4 + 1];
+				u16 row1 = ((u16)glyph[y * 4 + 2] << 8) | glyph[y * 4 + 3];
+				u16 mask = 0xC000 >> (x * 2);
+				set = (row0 | row1) & mask;
+			}
+
+			if (set)
+				*fb = gfx_con.fgcol;
+			else if (gfx_con.fillbg)
+				*fb = gfx_con.bgcol;
+			fb++;
+		}
+		fb += gfx_ctxt.stride - size;
+	}
+
+	gfx_con.x += size;
+	if (gfx_con.x > gfx_ctxt.width - size)
+	{
+		gfx_con.x = 0;
+		gfx_con.y += size;
+	}
+}
+
+static void _gfx_put_codepoint(u32 c)
+{
+	if (c > 126)
+	{
+		const u8 *glyph = _gfx_get_zh_glyph(c);
+		if (glyph)
+		{
+			_gfx_draw_zh_glyph(glyph);
+			return;
+		}
+		c = '?';
+	}
+
 	// Duplicate code for performance reasons.
 	switch (gfx_con.fntsz)
 	{
@@ -273,6 +349,57 @@ void gfx_putc(char c)
 				gfx_con.y = 0;
 		}
 		break;
+	}
+}
+
+void gfx_putc(char c)
+{
+	u8 byte = (u8)c;
+
+	if (!_gfx_utf8_remaining)
+	{
+		if (byte < 0x80)
+		{
+			_gfx_put_codepoint(byte);
+			return;
+		}
+		if (byte >= 0xC2 && byte <= 0xDF)
+		{
+			_gfx_utf8_codepoint = byte & 0x1F;
+			_gfx_utf8_remaining = 1;
+			return;
+		}
+		if (byte >= 0xE0 && byte <= 0xEF)
+		{
+			_gfx_utf8_codepoint = byte & 0x0F;
+			_gfx_utf8_remaining = 2;
+			return;
+		}
+		if (byte >= 0xF0 && byte <= 0xF4)
+		{
+			_gfx_utf8_codepoint = byte & 0x07;
+			_gfx_utf8_remaining = 3;
+			return;
+		}
+		_gfx_put_codepoint('?');
+		return;
+	}
+
+	if ((byte & 0xC0) != 0x80)
+	{
+		_gfx_utf8_remaining = 0;
+		_gfx_put_codepoint('?');
+		gfx_putc(c);
+		return;
+	}
+
+	_gfx_utf8_codepoint = (_gfx_utf8_codepoint << 6) | (byte & 0x3F);
+	if (!--_gfx_utf8_remaining)
+	{
+		if (_gfx_utf8_codepoint <= 0xFFFF)
+			_gfx_put_codepoint(_gfx_utf8_codepoint);
+		else
+			_gfx_put_codepoint('?');
 	}
 }
 
@@ -473,7 +600,7 @@ void gfx_hexdiff(u32 base, const void *buf1, const void *buf2, u32 len)
 
 	if (memcmp(buff1, buff2, len) == 0)
 	{
-		gfx_printf("Diff: No differences found.\n");
+		gfx_printf("差异: 未发现差异.\n");
 		return;
 	}
 
@@ -484,7 +611,7 @@ void gfx_hexdiff(u32 base, const void *buf1, const void *buf2, u32 len)
 		u32 bytes_left = len - i < 0x10 ? len - i : 0x10;
 		if (memcmp(buff1 + i, buff2 + i, bytes_left) == 0)
 			continue;
-		gfx_printf("Diff 1: %08x: ", base + i);
+		gfx_printf("差异 1: %08x: ", base + i);
 		for (u32 j = 0; j < bytes_left; j++)
 		{
 			if (buff1[i+j] != buff2[i+j])
@@ -494,7 +621,7 @@ void gfx_hexdiff(u32 base, const void *buf1, const void *buf2, u32 len)
 		}
 		gfx_puts("| ");
 		gfx_putc('\n');
-		gfx_printf("Diff 2: %08x: ", base + i);
+		gfx_printf("差异 2: %08x: ", base + i);
 		for (u32 j = 0; j < bytes_left; j++)
 		{
 			if (buff1[i+j] != buff2[i+j])

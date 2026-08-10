@@ -278,7 +278,7 @@ int extract_new_gen_keys(key_storage_t *keys, new_gen_keys_t *out, new_gen_keys_
         return -1;
 
     if (!emummc_storage_set_mmc_partition(EMMC_GPP)) {
-        EPRINTF("DEBUG: Unable to set partition.");
+        EPRINTF("DEBUG: 设置分区失败.");
         return -1;
     }
 
@@ -287,7 +287,7 @@ int extract_new_gen_keys(key_storage_t *keys, new_gen_keys_t *out, new_gen_keys_
 
     emmc_part_t *system_part = nx_emmc_part_find(&gpt, "SYSTEM");
     if (!system_part) {
-        EPRINTF("DEBUG: Unable to locate System partition.");
+        EPRINTF("DEBUG: 未找到 System 分区.");
         nx_emmc_gpt_free(&gpt);
         return -1;
     }
@@ -301,7 +301,7 @@ int extract_new_gen_keys(key_storage_t *keys, new_gen_keys_t *out, new_gen_keys_
     se_aes_key_set(KS_BIS_02_TWEAK, keys->bis_key[2] + 0x10, SE_KEY_128_SIZE);
 
     if (f_mount(&emmc_fs, "bis:", 1)) {
-        EPRINTF("DEBUG: Unable to mount system partition.");
+        EPRINTF("DEBUG: 挂载 System 分区失败.");
         nx_emmc_gpt_free(&gpt);
         return -1;
     }
@@ -328,7 +328,7 @@ int extract_new_gen_keys(key_storage_t *keys, new_gen_keys_t *out, new_gen_keys_
     char pkg1_nca_path[128] = {0};
     if (_scan_registered_find_nca(keys->header_key, _nca_pkg1_title_id,
                                    pkg1_nca_path, sizeof(pkg1_nca_path)) < 0) {
-        EPRINTF("DEBUG: BootImagePackage NCA (0100000000000819) not found.");
+        EPRINTF("DEBUG: 未找到 BootImagePackage NCA (0100000000000819).");
         f_mount(NULL, "bis:", 1);
         nx_emmc_gpt_free(&gpt);
         return -1;
@@ -344,12 +344,12 @@ int extract_new_gen_keys(key_storage_t *keys, new_gen_keys_t *out, new_gen_keys_
     NcaSect0Info sect0;
     if (_parse_nca_sect0_info(pkg1_nca_path, keys->header_key,
                            keys->key_area_key[0][0], &sect0) < 0) {
-        EPRINTF("DEBUG: Failed to parse NCA section 0.");
+        EPRINTF("DEBUG: 解析 NCA 分区 0 失败.");
         goto done;
     }
 
     if (f_open(&nca_fp, pkg1_nca_path, FA_READ | FA_OPEN_EXISTING) != FR_OK) {
-        EPRINTF("DEBUG: Failed to open NCA for streaming.");
+        EPRINTF("DEBUG: 打开 NCA 流失败.");
         goto done;
     }
     nca_open = true;
@@ -360,7 +360,7 @@ int extract_new_gen_keys(key_storage_t *keys, new_gen_keys_t *out, new_gen_keys_
     // Read and decrypt RomFS header (0x50 bytes, rounded to 0x60 for AES alignment).
     u8 romfs_hdr[0x60];
     if (_nca_ctr_read(&nca_fp, &sect0, sect0.ivfc_content_off, sizeof(romfs_hdr), romfs_hdr) < 0) {
-        EPRINTF("DEBUG: Failed to read RomFS header.");
+        EPRINTF("DEBUG: 读取 RomFS 头失败.");
         goto done;
     }
 
@@ -371,7 +371,7 @@ int extract_new_gen_keys(key_storage_t *keys, new_gen_keys_t *out, new_gen_keys_
     u64 data_off      = *(u64 *)(romfs_hdr + 0x48);
 
     if (dir_meta_size == 0 || file_meta_size == 0) {
-        EPRINTF("DEBUG: RomFS metadata tables are empty.");
+        EPRINTF("DEBUG: RomFS 元数据表为空.");
         goto done;
     }
 
@@ -384,13 +384,13 @@ int extract_new_gen_keys(key_storage_t *keys, new_gen_keys_t *out, new_gen_keys_
     if (_nca_ctr_read(&nca_fp, &sect0,
                        sect0.ivfc_content_off + dir_meta_off,
                        dir_sz, meta_buf) < 0) {
-        EPRINTF("DEBUG: Failed to read RomFS dir metadata.");
+        EPRINTF("DEBUG: 读取 RomFS 目录元数据失败.");
         goto done;
     }
     if (_nca_ctr_read(&nca_fp, &sect0,
                        sect0.ivfc_content_off + file_meta_off,
                        file_sz, meta_buf + dir_sz) < 0) {
-        EPRINTF("DEBUG: Failed to read RomFS file metadata.");
+        EPRINTF("DEBUG: 读取 RomFS 文件元数据失败.");
         goto done;
     }
 
@@ -400,7 +400,7 @@ int extract_new_gen_keys(key_storage_t *keys, new_gen_keys_t *out, new_gen_keys_
                               meta_buf + dir_sz, file_sz,
                               sect0.ivfc_content_off + data_off,
                               &pkg1_off, &pkg1_size) < 0) {
-        EPRINTF("DEBUG: nx/package1 not found in RomFS.");
+        EPRINTF("DEBUG: RomFS 中未找到 nx/package1.");
         goto done;
     }
 
@@ -410,7 +410,7 @@ int extract_new_gen_keys(key_storage_t *keys, new_gen_keys_t *out, new_gen_keys_
     memset(pkg1_buf, 0, pkg1_padded);
 
     if (_nca_ctr_read(&nca_fp, &sect0, pkg1_off, pkg1_padded, pkg1_buf) < 0) {
-        EPRINTF("DEBUG: Failed to read package1.");
+        EPRINTF("DEBUG: 读取 package1 失败.");
         goto done;
     }
 
@@ -418,13 +418,13 @@ int extract_new_gen_keys(key_storage_t *keys, new_gen_keys_t *out, new_gen_keys_
     tsec_derive_package1_key_08(pkg1_key);
 
     if (_decrypt_package1_cbc(pkg1_buf, pkg1_padded, pkg1_key) < 0) {
-        EPRINTF("DEBUG: Failed to decrypt package1.");
+        EPRINTF("DEBUG: 解密 package1 失败.");
         goto done;
     }
 
     u8 new_mkek_src[SE_KEY_128_SIZE];
     if (_find_master_kek_source(pkg1_buf, pkg1_padded, new_mkek_src) < 0) {
-        EPRINTF("DEBUG: OYASUMI magic not found in package1.");
+        EPRINTF("DEBUG: package1 中未找到 OYASUMI 魔数.");
         goto done;
     }
 

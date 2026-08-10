@@ -8,3 +8,4 @@ loader/payload_01.h
 tools/bin2c/bin2c
 keygen/tsec_keygen.h
 tools/lz/lz77
+tools/lz/check_overlap

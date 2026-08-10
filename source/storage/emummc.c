@@ -168,7 +168,7 @@ int emummc_storage_init_mmc()
 
 		if (f_stat(emu_cfg.emummc_file_based_path, &fno))
 		{
-			EPRINTF("Failed to open eMMC folder.");
+			EPRINTF("打开 eMMC 文件夹失败.");
 			goto out;
 		}
 		f_chmod(emu_cfg.emummc_file_based_path, AM_ARC, AM_ARC);
@@ -176,7 +176,7 @@ int emummc_storage_init_mmc()
 		strcat(emu_cfg.emummc_file_based_path, "/00");
 		if (f_stat(emu_cfg.emummc_file_based_path, &fno))
 		{
-			EPRINTF("Failed to open emuMMC rawnand.");
+			EPRINTF("打开 emuMMC rawnand 失败.");
 			goto out;
 		}
 		emu_cfg.file_based_part_size = fno.fsize >> 9;
@@ -212,7 +212,7 @@ int emummc_storage_read(u32 sector, u32 num_sectors, void *buf)
 		// Safety: avoid reading past the end of the SD card (important for very large cards).
 		if ((u64)abs_sector + (u64)num_sectors > (u64)sd_storage.sec_cnt)
 		{
-			EPRINTF("emuMMC read OOR");
+			EPRINTF("emuMMC 读取越界");
 			return 0;
 		}
 
@@ -234,13 +234,13 @@ int emummc_storage_read(u32 sector, u32 num_sectors, void *buf)
 		}
 		if (f_open(&fp, emu_cfg.emummc_file_based_path, FA_READ))
 		{
-			EPRINTF("Failed to open emuMMC image.");
+			EPRINTF("打开 emuMMC 镜像失败.");
 			return 0;
 		}
 		f_lseek(&fp, (u64)sector << 9);
 		if (f_read(&fp, buf, (u64)num_sectors << 9, NULL))
 		{
-			EPRINTF("Failed to read emuMMC image.");
+			EPRINTF("读取 emuMMC 镜像失败.");
 			f_close(&fp);
 			return 0;
 		}
@@ -266,7 +266,7 @@ int emummc_storage_write(u32 sector, u32 num_sectors, void *buf)
 		// Safety: avoid writing past the end of the SD card (important for very large cards).
 		if ((u64)abs_sector + (u64)num_sectors > (u64)sd_storage.sec_cnt)
 		{
-			EPRINTF("emuMMC write OOR");
+			EPRINTF("emuMMC 写入越界");
 			return 0;
 		}
 

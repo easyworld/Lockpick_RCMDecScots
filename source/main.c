@@ -101,7 +101,7 @@ int launch_payload(char *path, bool clear_screen)
 		if (f_open(&fp, path, FA_READ))
 		{
 			gfx_con.mute = false;
-			EPRINTFARGS("Payload file is missing!\n(%s)", path);
+			EPRINTFARGS("缺少 payload 文件!\n(%s)", path);
 
 			goto out;
 		}
@@ -121,7 +121,7 @@ int launch_payload(char *path, bool clear_screen)
 				f_close(&fp);
 
 				gfx_con.mute = false;
-				EPRINTF("Coreboot not allowed on Mariko!");
+				EPRINTF("Mariko 不支持 Coreboot!");
 
 				goto out;
 			}
@@ -250,7 +250,7 @@ void launch_tools()
 			}
 		}
 		else
-			EPRINTF("No payloads or modules found.");
+			EPRINTF("未找到 payload 或模块.");
 
 		free(ments);
 		free(filelist);
@@ -272,7 +272,7 @@ void launch_tools()
 			memcpy(dir, file_sec, strlen(file_sec) + 1);
 
 		launch_payload(dir, true);
-		EPRINTF("Failed to launch payload.");
+		EPRINTF("启动 payload 失败.");
 	}
 
 out:
@@ -314,23 +314,23 @@ void dump_mariko_partial_keys();
 ment_t ment_partials[] = {
 	MDEF_BACK(colors[0]),
 	MDEF_CHGLINE(),
-	MDEF_CAPTION("This dumps the results of writing zeros", colors[1]),
-	MDEF_CAPTION("over consecutive 32-bit portions of each", colors[1]),
-	MDEF_CAPTION("keyslot, the results of which can then", colors[1]),
-	MDEF_CAPTION("be bruteforced quickly on a computer", colors[1]),
-	MDEF_CAPTION("to recover keys from unreadable keyslots.", colors[1]),
+	MDEF_CAPTION("此功能向每个 keyslot 的连续", colors[1]),
+	MDEF_CAPTION("32 位区域写零并导出结果.", colors[1]),
+	MDEF_CAPTION("结果可在电脑上快速暴力破解,", colors[1]),
+	MDEF_CAPTION("用于恢复无法直接读取的", colors[1]),
+	MDEF_CAPTION("keyslot 密钥.", colors[1]),
 	MDEF_CHGLINE(),
-	MDEF_CAPTION("This includes the Mariko KEK and BEK", colors[2]),
-	MDEF_CAPTION("as well as the unique SBK.", colors[2]),
+	MDEF_CAPTION("其中包括 Mariko KEK, BEK", colors[2]),
+	MDEF_CAPTION("以及设备唯一的 SBK.", colors[2]),
 	MDEF_CHGLINE(),
-	MDEF_CAPTION("These are not useful for most users", colors[3]),
-	MDEF_CAPTION("but are included for archival purposes.", colors[3]),
+	MDEF_CAPTION("多数用户无需使用这些密钥,", colors[3]),
+	MDEF_CAPTION("此功能仅供存档.", colors[3]),
 	MDEF_CHGLINE(),
-	MDEF_CAPTION("Warning: this wipes keyslots!", colors[4]),
-	MDEF_CAPTION("The console must be completely restarted!", colors[4]),
-	MDEF_CAPTION("Modchip must run again to fix the keys!", colors[4]),
+	MDEF_CAPTION("警告: 此操作会清除 keyslot!", colors[4]),
+	MDEF_CAPTION("主机必须完全重启!", colors[4]),
+	MDEF_CAPTION("芯片必须再次运行以恢复密钥!", colors[4]),
 	MDEF_CAPTION("---------------", colors[5]),
-	MDEF_HANDLER("Dump Mariko Partials", dump_mariko_partial_keys, colors[0]),
+	MDEF_HANDLER("导出 Mariko 部分密钥", dump_mariko_partial_keys, colors[0]),
 	MDEF_END()
 };
 
@@ -342,18 +342,18 @@ power_state_t STATE_REBOOT_RCM          = REBOOT_RCM;
 power_state_t STATE_REBOOT_BYPASS_FUSES = REBOOT_BYPASS_FUSES;
 
 ment_t ment_top[] = {
-	MDEF_HANDLER("Dump from SysNAND", dump_sysnand, colors[0]),
-	MDEF_HANDLER("Dump from EmuNAND", dump_emunand, colors[1]),
+	MDEF_HANDLER("从系统 NAND 导出", dump_sysnand, colors[0]),
+	MDEF_HANDLER("从虚拟 NAND 导出", dump_emunand, colors[1]),
 	MDEF_CAPTION("---------------", colors[2]),
-	MDEF_HANDLER("Dump Amiibo Keys", dump_amiibo_keys, colors[3]),
-	MDEF_MENU("Dump Mariko Partials (requires reboot)", &menu_partials, colors[4]),
+	MDEF_HANDLER("导出 Amiibo 密钥", dump_amiibo_keys, colors[3]),
+	MDEF_MENU("导出 Mariko 部分密钥 (需要重启)", &menu_partials, colors[4]),
 	MDEF_CAPTION("---------------", colors[5]),
-	MDEF_HANDLER("Payloads...", launch_tools, colors[0]),
-	MDEF_HANDLER("Reboot to hekate", launch_hekate, colors[1]),
+	MDEF_HANDLER("Payload 工具...", launch_tools, colors[0]),
+	MDEF_HANDLER("重启到 hekate", launch_hekate, colors[1]),
 	MDEF_CAPTION("---------------", colors[2]),
-	MDEF_HANDLER_EX("Reboot (OFW)", &STATE_REBOOT_BYPASS_FUSES, power_set_state_ex, colors[3]),
-	MDEF_HANDLER_EX("Reboot (RCM)", &STATE_REBOOT_RCM, power_set_state_ex, colors[4]),
-	MDEF_HANDLER_EX("Power off", &STATE_POWER_OFF, power_set_state_ex, colors[5]),
+	MDEF_HANDLER_EX("重启 (正版系统)", &STATE_REBOOT_BYPASS_FUSES, power_set_state_ex, colors[3]),
+	MDEF_HANDLER_EX("重启 (RCM)", &STATE_REBOOT_RCM, power_set_state_ex, colors[4]),
+	MDEF_HANDLER_EX("关机", &STATE_POWER_OFF, power_set_state_ex, colors[5]),
 	MDEF_END()
 };
 
@@ -379,7 +379,7 @@ void dump_mariko_partial_keys()
 			grey_out_menu_item(&ment_partials[18]);
 		}
 
-		gfx_printf("\n%kPress a button to return to the menu.", COLOR_ORANGE);
+		gfx_printf("\n%k按任意键返回菜单.", COLOR_ORANGE);
 		btn_wait();
 	}
 }
