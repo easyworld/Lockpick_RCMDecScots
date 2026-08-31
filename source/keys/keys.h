@@ -25,13 +25,13 @@
 
 #define TPRINTF(text) \
     end_time = get_tmr_us(); \
-    gfx_printf(text" 用时 %d 微秒\n", end_time - start_time); \
+    gfx_printf(text" 耗時 %d 微秒\n", end_time - start_time); \
     start_time = get_tmr_us(); \
     minerva_periodic_training()
 
 #define TPRINTFARGS(text, args...) \
     end_time = get_tmr_us(); \
-    gfx_printf(text" 用时 %d 微秒\n", args, end_time - start_time); \
+    gfx_printf(text" 耗時 %d 微秒\n", args, end_time - start_time); \
     start_time = get_tmr_us(); \
     minerva_periodic_training()
 

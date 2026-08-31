@@ -600,7 +600,7 @@ void gfx_hexdiff(u32 base, const void *buf1, const void *buf2, u32 len)
 
 	if (memcmp(buff1, buff2, len) == 0)
 	{
-		gfx_printf("差异: 未发现差异.\n");
+		gfx_printf("差異: 未發現差異.\n");
 		return;
 	}
 
@@ -611,7 +611,7 @@ void gfx_hexdiff(u32 base, const void *buf1, const void *buf2, u32 len)
 		u32 bytes_left = len - i < 0x10 ? len - i : 0x10;
 		if (memcmp(buff1 + i, buff2 + i, bytes_left) == 0)
 			continue;
-		gfx_printf("差异 1: %08x: ", base + i);
+		gfx_printf("差異 1: %08x: ", base + i);
 		for (u32 j = 0; j < bytes_left; j++)
 		{
 			if (buff1[i+j] != buff2[i+j])
@@ -621,7 +621,7 @@ void gfx_hexdiff(u32 base, const void *buf1, const void *buf2, u32 len)
 		}
 		gfx_puts("| ");
 		gfx_putc('\n');
-		gfx_printf("差异 2: %08x: ", base + i);
+		gfx_printf("差異 2: %08x: ", base + i);
 		for (u32 j = 0; j < bytes_left; j++)
 		{
 			if (buff1[i+j] != buff2[i+j])

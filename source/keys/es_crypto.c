@@ -109,7 +109,7 @@ bool decrypt_eticket_rsa_key(key_storage_t *keys, void *buffer, bool is_dev) {
     se_aes_crypt_ctr(KS_AES_CTR, &keys->eticket_rsa_keypair, sizeof(keys->eticket_rsa_keypair), encrypted_key, sizeof(keys->eticket_rsa_keypair), iv);
 
     if (!test_eticket_rsa_keypair(&keys->eticket_rsa_keypair)) {
-        EPRINTF("无效的 eticket 密钥对.");
+        EPRINTF("無效的 eticket 金鑰組.");
         memset(&keys->eticket_rsa_keypair, 0, sizeof(keys->eticket_rsa_keypair));
         return false;
     }

@@ -66,9 +66,9 @@ PartialAesKeyCrack.exe 11111111111111111111111111111111 222222222222222222222222
    make
    ```
 
-### Chinese font subset
+### Traditional Chinese font subset
 
-The Chinese interface uses a generated 16x16, 1-bit GNU Unifont subset. The
+The Traditional Chinese interface uses a generated 16x16, 1-bit GNU Unifont subset. The
 generated `source/gfx/font_zh.inl` is committed, so a normal build does not
 need the complete font. To regenerate it after changing Chinese text:
 

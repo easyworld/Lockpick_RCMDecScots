@@ -132,7 +132,7 @@ static void _derive_master_keys_from_vectors_and_sources(key_storage_t *keys, bo
     load_aes_key(KS_AES_ECB, keys->temp_key, keys->master_key[0], is_dev ? master_key_vectors_dev[0] : master_key_vectors[0]);
 
     if (key_exists(keys->temp_key)) {
-        EPRINTFARGS("无法生成%s主密钥.", is_dev ? "开发机" : "零售机");
+        EPRINTFARGS("無法產生%s主金鑰.", is_dev ? "開發機" : "零售機");
         memset(keys->master_key, 0, sizeof(keys->master_key));
     }
 }
@@ -147,7 +147,7 @@ static void _derive_keyblob_keys(key_storage_t *keys) {
     if (!emmc_storage.initialized) {
         have_keyblobs = false;
     } else if (!emummc_storage_read(KEYBLOB_OFFSET / NX_EMMC_BLOCKSIZE, KB_FIRMWARE_VERSION_600 + 1, keyblob_buffer)) {
-        EPRINTF("无法读取 keyblob.");
+        EPRINTF("無法讀取 keyblob.");
         have_keyblobs = false;
     } else {
         have_keyblobs = true;
@@ -172,7 +172,7 @@ static void _derive_keyblob_keys(key_storage_t *keys) {
         se_aes_key_set(KS_AES_CMAC, keys->keyblob_mac_key[i], sizeof(keys->keyblob_mac_key[i]));
         se_aes_cmac(KS_AES_CMAC, keyblob_mac, sizeof(keyblob_mac), current_keyblob->iv, sizeof(current_keyblob->iv) + sizeof(keyblob_t));
         if (memcmp(current_keyblob->cmac, keyblob_mac, sizeof(keyblob_mac)) != 0) {
-            EPRINTFARGS("Keyblob %x 已损坏.", i);
+            EPRINTFARGS("Keyblob %x 已損毀.", i);
             continue;
         }
 
@@ -215,7 +215,7 @@ static void _derive_master_keys(key_storage_t *prod_keys, key_storage_t *dev_key
         // runs this at all, confirmed by Atmosphere's DeriveAllKeys() only calling
         // tsec::RunTsecFirmware() when soc_type == SocType_Erista).
         if (run_ams_keygen()) {
-            EPRINTF("运行 keygen 失败.");
+            EPRINTF("執行 keygen 失敗.");
             return;
         }
 
@@ -296,13 +296,13 @@ static bool _get_titlekeys_from_save(u32 buf_size, const u8 *save_mac_key, title
 
     if (is_personalized) {
         titlekey_save_path[25] = '2';
-        gfx_printf("\n%k个性化票据... ", colors[color_idx % 6]);
+        gfx_printf("\n%k個人化票證... ", colors[color_idx % 6]);
     } else {
-        gfx_printf("\n%k通用票据...     ", colors[color_idx % 6]);
+        gfx_printf("\n%k共用票證...     ", colors[color_idx % 6]);
     }
 
     if (f_open(&fp, titlekey_save_path, FA_READ | FA_OPEN_EXISTING)) {
-        EPRINTF("无法打开 e1 存档, 已跳过.");
+        EPRINTF("無法開啟 e1 儲存資料, 已略過.");
         return false;
     }
 
@@ -310,10 +310,10 @@ static bool _get_titlekeys_from_save(u32 buf_size, const u8 *save_mac_key, title
     save_init(save_ctx, &fp, save_mac_key, 0);
 
     bool save_process_success = save_process(save_ctx);
-    TPRINTF("\n  处理存档...");
+    TPRINTF("\n  處理儲存資料...");
 
     if (!save_process_success) {
-        EPRINTF("处理 es 存档失败.");
+        EPRINTF("處理 es 儲存資料失敗.");
         f_close(&fp);
         save_free_contexts(save_ctx);
         free(save_ctx);
@@ -321,7 +321,7 @@ static bool _get_titlekeys_from_save(u32 buf_size, const u8 *save_mac_key, title
     }
 
     if (!save_open_file(save_ctx, &ticket_file, ticket_list_bin_path, OPEN_MODE_READ)) {
-        EPRINTF("存档中未找到 ticket_list.bin.");
+        EPRINTF("儲存資料中找不到 ticket_list.bin.");
         f_close(&fp);
         save_free_contexts(save_ctx);
         free(save_ctx);
@@ -340,10 +340,10 @@ static bool _get_titlekeys_from_save(u32 buf_size, const u8 *save_mac_key, title
         }
         offset += br;
     }
-    TPRINTF("  统计 titlekey...");
+    TPRINTF("  統計 titlekey...");
 
     if (!save_open_file(save_ctx, &ticket_file, ticket_bin_path, OPEN_MODE_READ)) {
-        EPRINTF("存档中未找到 ticket.bin.");
+        EPRINTF("儲存資料中找不到 ticket.bin.");
         f_close(&fp);
         save_free_contexts(save_ctx);
         free(save_ctx);
@@ -370,9 +370,9 @@ static bool _get_titlekeys_from_save(u32 buf_size, const u8 *save_mac_key, title
     gfx_con_setpos(0, save_y);
 
     if (is_personalized) {
-        TPRINTFARGS("\n%k个性化票据... ", colors[(color_idx++) % 6]);
+        TPRINTFARGS("\n%k個人化票證... ", colors[(color_idx++) % 6]);
     } else {
-        TPRINTFARGS("\n%k通用票据...     ", colors[(color_idx++) % 6]);
+        TPRINTFARGS("\n%k共用票證...     ", colors[(color_idx++) % 6]);
     }
 
     gfx_printf("\n\n\n");
@@ -395,12 +395,12 @@ static bool _derive_sd_seed(key_storage_t *keys) {
     FRESULT fr = f_open(&fp, private_path, FA_READ | FA_OPEN_EXISTING);
     free(private_path);
     if (fr) {
-        EPRINTF("无法打开 SD 种子向量, 已跳过.");
+        EPRINTF("無法開啟 SD 種子向量, 已略過.");
         return false;
     }
     // Get sd seed verification vector
     if (f_read(&fp, keys->temp_key, SE_KEY_128_SIZE, &read_bytes) || read_bytes != SE_KEY_128_SIZE) {
-        EPRINTF("无法读取 SD 种子向量, 已跳过.");
+        EPRINTF("無法讀取 SD 種子向量, 已略過.");
         f_close(&fp);
         return false;
     }
@@ -408,7 +408,7 @@ static bool _derive_sd_seed(key_storage_t *keys) {
 
     // This file is small enough that parsing the savedata properly is slower
     if (f_open(&fp, "bis:/save/8000000000000043", FA_READ | FA_OPEN_EXISTING)) {
-        EPRINTF("无法打开 ns_appman 存档.\n已跳过 SD 种子.");
+        EPRINTF("無法開啟 ns_appman 儲存資料.\n已略過 SD 種子.");
         return false;
     }
 
@@ -425,7 +425,7 @@ static bool _derive_sd_seed(key_storage_t *keys) {
     }
     f_close(&fp);
 
-    TPRINTFARGS("%kSD 种子...      ", colors[(color_idx++) % 6]);
+    TPRINTFARGS("%kSD 種子...      ", colors[(color_idx++) % 6]);
 
     return true;
 }
@@ -441,7 +441,7 @@ static bool _derive_titlekeys(key_storage_t *keys, titlekey_buffer_t *titlekey_b
     _get_titlekeys_from_save(buf_size, keys->save_mac_key, titlekey_buffer, NULL);
     _get_titlekeys_from_save(buf_size, keys->save_mac_key, titlekey_buffer, &keys->eticket_rsa_keypair);
 
-    gfx_printf("\n%k  找到 %d 个 titlekey.\n\n", colors[(color_idx++) % 6], _titlekey_count);
+    gfx_printf("\n%k  找到 %d 個 titlekey.\n\n", colors[(color_idx++) % 6], _titlekey_count);
 
     return true;
 }
@@ -459,16 +459,16 @@ static void _derive_emmc_keys(key_storage_t *keys, titlekey_buffer_t *titlekey_b
     se_aes_key_set(KS_BIS_02_TWEAK, keys->bis_key[2] + 0x10, SE_KEY_128_SIZE);
 
     if (!emummc_storage_set_mmc_partition(EMMC_GPP)) {
-        EPRINTF("设置分区失败.");
+        EPRINTF("設定分割區失敗.");
         return;
     }
 
     if (!decrypt_ssl_rsa_key(keys, titlekey_buffer)) {
-        EPRINTF("生成 SSL 密钥失败.");
+        EPRINTF("產生 SSL 金鑰失敗.");
     }
 
     if (!decrypt_eticket_rsa_key(keys, titlekey_buffer, is_dev)) {
-        EPRINTF("生成 ETicket 密钥失败.");
+        EPRINTF("產生 ETicket 金鑰失敗.");
     }
 
     // Parse eMMC GPT
@@ -477,7 +477,7 @@ static void _derive_emmc_keys(key_storage_t *keys, titlekey_buffer_t *titlekey_b
 
     emmc_part_t *system_part = nx_emmc_part_find(&gpt, "SYSTEM");
     if (!system_part) {
-        EPRINTF("未找到 System 分区.");
+        EPRINTF("找不到 System 分割區.");
         nx_emmc_gpt_free(&gpt);
         return;
     }
@@ -485,19 +485,19 @@ static void _derive_emmc_keys(key_storage_t *keys, titlekey_buffer_t *titlekey_b
     nx_emmc_bis_init(system_part);
 
     if (f_mount(&emmc_fs, "bis:", 1)) {
-        EPRINTF("挂载 System 分区失败.");
+        EPRINTF("掛載 System 分割區失敗.");
         nx_emmc_gpt_free(&gpt);
         return;
     }
 
     if (!sd_mount()) {
-        EPRINTF("挂载 SD 卡失败.");
+        EPRINTF("掛載 SD 卡失敗.");
     } else if (!_derive_sd_seed(keys)) {
-        EPRINTF("获取 SD 种子失败.");
+        EPRINTF("取得 SD 種子失敗.");
     }
 
     if (!_derive_titlekeys(keys, titlekey_buffer, is_dev)) {
-        EPRINTF("生成 titlekey 失败.");
+        EPRINTF("產生 titlekey 失敗.");
     }
 
     f_mount(NULL, "bis:", 1);
@@ -533,7 +533,7 @@ int save_mariko_partial_keys(u32 start, u32 count, bool append) {
         if (ks < ARRAY_SIZE(mariko_key_vectors)) {
             se_aes_crypt_block_ecb(ks, DECRYPT, &data[0], mariko_key_vectors[ks]);
             if (key_exists(data)) {
-                EPRINTFARGS("验证 keyslot %d 失败.", ks);
+                EPRINTFARGS("驗證 keyslot %d 失敗.", ks);
                 continue;
             }
         }
@@ -551,7 +551,7 @@ int save_mariko_partial_keys(u32 start, u32 count, bool append) {
 
         // Skip saving key if two results are the same indicating unsuccessful overwrite or empty slot
         if (memcmp(&data[0], &data[SE_KEY_128_SIZE], SE_KEY_128_SIZE) == 0) {
-            EPRINTFARGS("覆盖 keyslot %d 失败.", ks);
+            EPRINTFARGS("覆寫 keyslot %d 失敗.", ks);
             continue;
         }
 
@@ -566,7 +566,7 @@ int save_mariko_partial_keys(u32 start, u32 count, bool append) {
     free(data);
 
     if (strlen(text_buffer) == 0) {
-        EPRINTFARGS("导出部分密钥 %d-%d 失败.", start, start + count - 1);
+        EPRINTFARGS("匯出部分金鑰 %d-%d 失敗.", start, start + count - 1);
         free(text_buffer);
         return 2;
     }
@@ -581,13 +581,13 @@ int save_mariko_partial_keys(u32 start, u32 count, bool append) {
     }
 
     if (!sd_mount()) {
-        EPRINTF("挂载 SD 卡失败.");
+        EPRINTF("掛載 SD 卡失敗.");
         free(text_buffer);
         return 3;
     }
 
     if (f_open(&fp, keyfile_path, mode)) {
-        EPRINTF("写入部分密钥到 SD 卡失败.");
+        EPRINTF("將部分金鑰寫入 SD 卡失敗.");
         free(text_buffer);
         return 3;
     }
@@ -595,7 +595,7 @@ int save_mariko_partial_keys(u32 start, u32 count, bool append) {
     f_write(&fp, text_buffer, strlen(text_buffer), NULL);
     f_close(&fp);
 
-    gfx_printf("%k部分密钥已写入 %s\n", colors[(color_idx++) % 6], keyfile_path);
+    gfx_printf("%k部分金鑰已寫入 %s\n", colors[(color_idx++) % 6], keyfile_path);
 
     free(text_buffer);
 
@@ -605,7 +605,7 @@ int save_mariko_partial_keys(u32 start, u32 count, bool append) {
 static void _save_keys_to_sd(key_storage_t *keys, titlekey_buffer_t *titlekey_buffer, bool is_dev,
                               const new_gen_keys_t *new_keys, int new_gen_mkr) {
     if (!sd_mount()) {
-        EPRINTF("挂载 SD 卡失败.");
+        EPRINTF("掛載 SD 卡失敗.");
         return;
     }
 
@@ -744,8 +744,8 @@ static void _save_keys_to_sd(key_storage_t *keys, titlekey_buffer_t *titlekey_bu
         _save_key("tsec_root_key_01",  new_keys->tsec_root_key_01, SE_KEY_128_SIZE, text_buffer);
     }
 
-    gfx_printf("\n%k  找到 %d 个%s密钥.\n\n", colors[(color_idx++) % 6], _key_count, is_dev ? "开发机" : "零售机");
-    gfx_printf("%k已生成到 master_key_%02x.\n\n", colors[(color_idx++) % 6], KB_FIRMWARE_VERSION_MAX);
+    gfx_printf("\n%k  找到 %d 個%s金鑰.\n\n", colors[(color_idx++) % 6], _key_count, is_dev ? "開發機" : "零售機");
+    gfx_printf("%k已產生至 master_key_%02x.\n\n", colors[(color_idx++) % 6], KB_FIRMWARE_VERSION_MAX);
 
     f_mkdir("sd:/switch");
 
@@ -753,9 +753,9 @@ static void _save_keys_to_sd(key_storage_t *keys, titlekey_buffer_t *titlekey_bu
 
     FILINFO fno;
     if (!sd_save_to_file(text_buffer, strlen(text_buffer), keyfile_path) && !f_stat(keyfile_path, &fno)) {
-        gfx_printf("%k写入 %d 字节到 %s\n", colors[(color_idx++) % 6], (u32)fno.fsize, keyfile_path);
+        gfx_printf("%k將 %d 位元組寫入 %s\n", colors[(color_idx++) % 6], (u32)fno.fsize, keyfile_path);
     } else {
-        EPRINTF("保存密钥到 SD 卡失败.");
+        EPRINTF("將金鑰儲存至 SD 卡失敗.");
     }
 
     if (_titlekey_count == 0 || !titlekey_buffer) {
@@ -777,9 +777,9 @@ static void _save_keys_to_sd(key_storage_t *keys, titlekey_buffer_t *titlekey_bu
 
     keyfile_path = "sd:/switch/title.keys";
     if (!sd_save_to_file(text_buffer, strlen(text_buffer), keyfile_path) && !f_stat(keyfile_path, &fno)) {
-        gfx_printf("%k写入 %d 字节到 %s\n", colors[(color_idx++) % 6], (u32)fno.fsize, keyfile_path);
+        gfx_printf("%k將 %d 位元組寫入 %s\n", colors[(color_idx++) % 6], (u32)fno.fsize, keyfile_path);
     } else {
-        EPRINTF("保存 titlekey 到 SD 卡失败.");
+        EPRINTF("將 titlekey 儲存至 SD 卡失敗.");
     }
 
     free(text_buffer);
@@ -789,14 +789,14 @@ static void _derive_keys() {
     minerva_periodic_training();
 
     if (!check_keyslot_access()) {
-        EPRINTF("无法设置加密 keyslot!\n请更换 payload 启动方式,\n使用芯片时请刷入 Spacecraft-NX.");
+        EPRINTF("無法設定加密 keyslot!\n請更換 payload 啟動方式,\n使用晶片時請燒錄 Spacecraft-NX.");
         return;
     }
 
     u32 start_whole_operation_time = get_tmr_us();
 
     if (emummc_storage_init_mmc()) {
-        EPRINTF("初始化 MMC 失败.");
+        EPRINTF("初始化 MMC 失敗.");
     } else {
         TPRINTFARGS("%k初始化 MMC...   ", colors[(color_idx++) % 6]);
     }
@@ -804,7 +804,7 @@ static void _derive_keys() {
     minerva_periodic_training();
 
     if (emmc_storage.initialized && !emummc_storage_set_mmc_partition(EMMC_BOOT0)) {
-        EPRINTF("设置分区失败.");
+        EPRINTF("設定分割區失敗.");
         emummc_storage_end();
     }
 
@@ -815,11 +815,11 @@ static void _derive_keys() {
 
     _derive_master_keys(&prod_keys, &dev_keys, is_dev);
 
-    TPRINTFARGS("%k主密钥...       ", colors[(color_idx++) % 6]);
+    TPRINTFARGS("%k主金鑰...       ", colors[(color_idx++) % 6]);
 
     _derive_bis_keys(keys);
 
-    TPRINTFARGS("%kBIS 密钥...     ", colors[(color_idx++) % 6]);
+    TPRINTFARGS("%kBIS 金鑰...     ", colors[(color_idx++) % 6]);
 
     _derive_misc_keys(keys);
     _derive_non_unique_keys(&prod_keys, is_dev);
@@ -829,26 +829,26 @@ static void _derive_keys() {
     int new_gen_mkr = 0, gap_start = 0, gap_end = -1;
     int key_gen_result = extract_new_gen_keys(keys, &new_keys, &new_keys_dev, &new_gen_mkr, &gap_start, &gap_end);
     if (key_gen_result > 0) {
-        gfx_printf("%k已为 master_key_%02x 生成新密钥\n", colors[(color_idx++) % 6], new_gen_mkr);
+        gfx_printf("%k已為 master_key_%02x 產生新金鑰\n", colors[(color_idx++) % 6], new_gen_mkr);
         if (gap_start <= gap_end)
             EPRINTFARGS("警告: 缺少版本 %02x-%02x 的 master_kek_source.", gap_start, gap_end);
     } else if (key_gen_result == 0) {
-        gfx_printf("%k密钥生成已是最新.\n", colors[(color_idx++) % 6]);
+        gfx_printf("%k金鑰已是最新版本.\n", colors[(color_idx++) % 6]);
     }
 
     titlekey_buffer_t *titlekey_buffer = (titlekey_buffer_t *)TITLEKEY_BUF_ADR;
 
     // Requires BIS key for SYSTEM partition
     if (!emmc_storage.initialized) {
-        EPRINTF("eMMC 未初始化.\n已跳过 SD 种子和 titlekey.");
+        EPRINTF("eMMC 尚未初始化.\n已略過 SD 種子和 titlekey.");
     } else if (key_exists(keys->bis_key[2])) {
         _derive_emmc_keys(keys, titlekey_buffer, is_dev);
     } else {
-        EPRINTF("缺少所需 BIS 密钥.\n已跳过 SD 种子和 titlekey.");
+        EPRINTF("缺少必要的 BIS 金鑰.\n已略過 SD 種子和 titlekey.");
     }
 
     end_time = get_tmr_us();
-    gfx_printf("%kLockpick 全部完成, 用时 %d 微秒\n", colors[(color_idx++) % 6], end_time - start_whole_operation_time);
+    gfx_printf("%kLockpick 全部完成, 耗時 %d 微秒\n", colors[(color_idx++) % 6], end_time - start_whole_operation_time);
 
     if (h_cfg.t210b01) {
         // On Mariko, save only relevant key set (no new-gen keys)
@@ -882,7 +882,7 @@ void derive_amiibo_keys() {
     minerva_periodic_training();
 
     if (!key_exists(keys->master_key[0])) {
-        EPRINTF("生成 NFC 主密钥失败.");
+        EPRINTF("產生 NFC 主金鑰失敗.");
         minerva_change_freq(FREQ_800);
         btn_wait();
         return;
@@ -898,18 +898,18 @@ void derive_amiibo_keys() {
     se_calc_sha256_oneshot(hash, &nfc_save_keys[0], sizeof(nfc_save_keys));
 
     if (memcmp(hash, is_dev ? nfc_blob_hash_dev : nfc_blob_hash, sizeof(hash)) != 0) {
-        EPRINTF("Amiibo 哈希不匹配, 已跳过保存.");
+        EPRINTF("Amiibo 雜湊不符, 已略過儲存.");
     } else {
         const char *keyfile_path = is_dev ? "sd:/switch/key_dev.bin" : "sd:/switch/key_retail.bin";
 
         if (!sd_save_to_file(&nfc_save_keys[0], sizeof(nfc_save_keys), keyfile_path)) {
-            gfx_printf("%kAmiibo 密钥已写入\n %s\n", colors[(color_idx++) % 6], keyfile_path);
+            gfx_printf("%kAmiibo 金鑰已寫入\n %s\n", colors[(color_idx++) % 6], keyfile_path);
         } else {
-            EPRINTF("保存 Amiibo 密钥到 SD 卡失败.");
+            EPRINTF("將 Amiibo 金鑰儲存至 SD 卡失敗.");
         }
     }
 
-    gfx_printf("\n%k按任意键返回菜单.", colors[(color_idx++) % 6]);
+    gfx_printf("\n%k按任意鍵返回選單.", colors[(color_idx++) % 6]);
     minerva_change_freq(FREQ_800);
     btn_wait();
     gfx_clear_grey(0x1B);
@@ -942,16 +942,16 @@ void dump_keys() {
     }
 
     minerva_change_freq(FREQ_800);
-    gfx_printf("\n%k按 VOL+ 保存截图,\n按其他键返回菜单.\n\n", colors[(color_idx++) % 6]);
+    gfx_printf("\n%k按 VOL+ 儲存螢幕截圖,\n按其他按鍵返回選單.\n\n", colors[(color_idx++) % 6]);
     u8 btn = btn_wait();
     if (btn == BTN_VOL_UP) {
         int res = save_fb_to_bmp();
         if (!res) {
-            gfx_printf("%k截图已保存到 sd:/switch/lockpick_rcm.bmp.", colors[(color_idx++) % 6]);
+            gfx_printf("%k螢幕截圖已儲存至 sd:/switch/lockpick_rcm.bmp.", colors[(color_idx++) % 6]);
         } else {
-            EPRINTF("截图失败.");
+            EPRINTF("螢幕截圖失敗.");
         }
-        gfx_printf("\n%k按任意键返回菜单.", colors[(color_idx++) % 6]);
+        gfx_printf("\n%k按任意鍵返回選單.", colors[(color_idx++) % 6]);
         btn_wait();
     }
     gfx_clear_grey(0x1B);

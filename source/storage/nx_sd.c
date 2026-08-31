@@ -145,11 +145,11 @@ bool sd_mount()
 	if (res)
 	{
 		gfx_con.mute = false;
-		EPRINTF("初始化 SD 卡失败.");
+		EPRINTF("初始化 SD 卡失敗.");
 		if (!sdmmc_get_sd_inserted())
-			EPRINTF("请确认已插入 SD 卡.");
+			EPRINTF("請確認已插入 SD 卡.");
 		else
-			EPRINTF("SD 读卡器连接异常!");
+			EPRINTF("SD 讀卡機連線異常!");
 	}
 	else
 	{
@@ -162,7 +162,7 @@ bool sd_mount()
 		else
 		{
 			gfx_con.mute = false;
-			EPRINTFARGS("挂载 SD 卡失败 (FatFS 错误 %d).\n请确认存在 FAT 分区.", res);
+			EPRINTFARGS("掛載 SD 卡失敗 (FatFS 錯誤 %d).\n請確認存在 FAT 分割區.", res);
 		}
 	}
 
@@ -222,7 +222,7 @@ int sd_save_to_file(void *buf, u32 size, const char *filename)
 	res = f_open(&fp, filename, FA_CREATE_ALWAYS | FA_WRITE);
 	if (res)
 	{
-		EPRINTFARGS("创建文件时出错 (%d)\n%s.\n", res, filename);
+		EPRINTFARGS("建立檔案時發生錯誤 (%d)\n%s.\n", res, filename);
 		return res;
 	}
 
